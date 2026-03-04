@@ -1,0 +1,117 @@
+# GitHub Actions workflow for home-camera
+# Latest-tag strategy (no semantic version auto-increment)
+
+name: Build and Push to Harbor - home-camera
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  build-and-push:
+    runs-on: home-camera-runners  # Kubernetes Runner
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup kubectl and Harbor credentials
+      run: |
+        echo "=== Setup kubectl and Harbor credentials ==="
+
+        # Install kubectl
+        echo "Installing kubectl..."
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/
+
+        # Configure kubectl for in-cluster access
+        echo "Configuring kubectl..."
+        export KUBECONFIG=/tmp/kubeconfig
+        kubectl config set-cluster default \
+            --server=https://kubernetes.default.svc \
+            --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+            --kubeconfig=$KUBECONFIG
+        kubectl config set-credentials default \
+            --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) \
+            --kubeconfig=$KUBECONFIG
+        kubectl config set-context default \
+            --cluster=default --user=default \
+            --kubeconfig=$KUBECONFIG
+        kubectl config use-context default --kubeconfig=$KUBECONFIG
+
+        # Get Harbor credentials
+        echo "Getting Harbor credentials..."
+        kubectl get secret harbor-auth -n arc-systems -o jsonpath='{.data.HARBOR_USERNAME}' | base64 -d > /tmp/harbor_username
+        kubectl get secret harbor-auth -n arc-systems -o jsonpath='{.data.HARBOR_PASSWORD}' | base64 -d > /tmp/harbor_password
+        kubectl get secret harbor-auth -n arc-systems -o jsonpath='{.data.HARBOR_URL}' | base64 -d > /tmp/harbor_url
+        kubectl get secret harbor-auth -n arc-systems -o jsonpath='{.data.HARBOR_PROJECT}' | base64 -d > /tmp/harbor_project
+        kubectl get secret ca-key-pair -n cert-manager -o jsonpath='{.data.ca\.crt}' | base64 -d > /tmp/harbor_ca.crt
+
+        chmod 600 /tmp/harbor_*
+        echo "✅ Harbor credentials retrieved successfully"
+
+    - name: Build and push images using Docker
+      run: |
+        echo "=== Build and push images using Docker ==="
+
+        HARBOR_USERNAME=$(cat /tmp/harbor_username)
+        HARBOR_PASSWORD=$(cat /tmp/harbor_password)
+        HARBOR_URL="harbor.internal.qroksera.com"
+        HARBOR_PROJECT=$(cat /tmp/harbor_project)
+        IMAGE_SHA_TAG="${{ github.sha }}"
+        IMAGE_LATEST_TAG="latest"
+
+        SHOULD_PUSH="false"
+        if [[ "${{ github.event_name }}" == "push" ]]; then
+          SHOULD_PUSH="true"
+        fi
+
+        # 内部CAを信頼ストアに追加
+        echo "Installing internal CA..."
+        sudo cp /tmp/harbor_ca.crt /usr/local/share/ca-certificates/harbor-internal-ca.crt
+        sudo update-ca-certificates
+
+        # Docker用のCA設定
+        echo "Configuring Docker CA..."
+        sudo mkdir -p /etc/docker/certs.d/harbor.internal.qroksera.com
+        sudo cp /tmp/harbor_ca.crt /etc/docker/certs.d/harbor.internal.qroksera.com/ca.crt
+
+        # Build Docker image
+        echo "Building Docker image"
+        docker build -t $HARBOR_URL/$HARBOR_PROJECT/home-camera:$IMAGE_LATEST_TAG .
+        docker build -t $HARBOR_URL/$HARBOR_PROJECT/home-camera:$IMAGE_SHA_TAG .
+
+        # pushするかどうかの判定（PR時はpushしない）
+        if [ "$SHOULD_PUSH" == "false" ]; then
+          echo "⏭️  Skipping push (PR build only)"
+          exit 0
+        fi
+
+        # /etc/hostsにharbor.internal.qroksera.comを追加
+        echo "192.168.122.100 harbor.internal.qroksera.com" | sudo tee -a /etc/hosts
+
+        # Harborにログイン
+        echo "Logging in to Harbor..."
+        docker login $HARBOR_URL -u "$HARBOR_USERNAME" -p "$HARBOR_PASSWORD"
+
+        # Harborへpush
+        echo "Pushing to Harbor..."
+        docker push $HARBOR_URL/$HARBOR_PROJECT/home-camera:$IMAGE_LATEST_TAG
+        docker push $HARBOR_URL/$HARBOR_PROJECT/home-camera:$IMAGE_SHA_TAG
+
+        echo "✅ Images pushed successfully to Harbor"
+        echo "📦 Pushed tags: $IMAGE_LATEST_TAG, $IMAGE_SHA_TAG"
+
+    - name: Cleanup
+      if: always()
+      run: |
+        echo "=== Cleanup ==="
+        rm -f /tmp/harbor_* /tmp/kubeconfig /tmp/home-camera-*.tar
+        echo "✅ Cleanup completed"
