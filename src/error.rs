@@ -20,12 +20,6 @@ pub enum AppError {
     #[error("uri parse error: {0}")]
     Uri(String),
 
-    #[error("sdp parse error: {0}")]
-    Sdp(String),
-
-    #[error("mp4 mux error: {0}")]
-    Mp4Mux(String),
-
     #[error("s3 upload error: {0}")]
     S3Upload(String),
 

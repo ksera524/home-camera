@@ -381,12 +381,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "base64"
-version = "0.22.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
-
-[[package]]
 name = "base64-simd"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -798,10 +792,8 @@ dependencies = [
  "aws-credential-types",
  "aws-sdk-s3",
  "aws-types",
- "base64",
  "proptest",
  "shiguredo_http11",
- "shiguredo_mp4",
  "shiguredo_rtsp",
  "thiserror",
  "time",
@@ -1536,12 +1528,6 @@ name = "shiguredo_http11"
 version = "2026.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "84628cbdeb6a6a46e1134587ecc4ff6a2013837bcc4894d06818dcdc311998ea"
-
-[[package]]
-name = "shiguredo_mp4"
-version = "2026.2.0-canary.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b060fffc1e7378d42623f8257807c1e44bd522f3c17b5179efb656b7ad77bd44"
 
 [[package]]
 name = "shiguredo_rtsp"

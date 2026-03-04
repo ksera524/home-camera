@@ -12,12 +12,16 @@ pub struct AppConfig {
     pub s3_bucket: String,
     pub camera_id: String,
     pub record_seconds: u64,
+    pub ffmpeg_preset: String,
+    pub ffmpeg_crf: u8,
 }
 
 impl AppConfig {
     pub const DEFAULT_BUCKET: &'static str = "home-camera-recordings";
     pub const DEFAULT_CAMERA_ID: &'static str = "camera";
     pub const DEFAULT_RECORD_SECONDS: u64 = 3600;
+    pub const DEFAULT_FFMPEG_PRESET: &'static str = "veryfast";
+    pub const DEFAULT_FFMPEG_CRF: u8 = 23;
 
     pub fn from_env() -> Result<Self, AppError> {
         let mut map = HashMap::new();
@@ -66,6 +70,34 @@ impl AppConfig {
             None => Self::DEFAULT_RECORD_SECONDS,
         };
 
+        let ffmpeg_preset = vars
+            .get("FFMPEG_PRESET")
+            .cloned()
+            .unwrap_or_else(|| Self::DEFAULT_FFMPEG_PRESET.to_string());
+        if ffmpeg_preset.trim().is_empty() {
+            return Err(AppError::InvalidEnv {
+                name: "FFMPEG_PRESET",
+                reason: "must not be empty".to_string(),
+            });
+        }
+
+        let ffmpeg_crf = match vars.get("FFMPEG_CRF") {
+            Some(v) => {
+                let parsed = v.parse::<u8>().map_err(|_| AppError::InvalidEnv {
+                    name: "FFMPEG_CRF",
+                    reason: "must be an integer".to_string(),
+                })?;
+                if parsed > 51 {
+                    return Err(AppError::InvalidEnv {
+                        name: "FFMPEG_CRF",
+                        reason: "must be <= 51".to_string(),
+                    });
+                }
+                parsed
+            }
+            None => Self::DEFAULT_FFMPEG_CRF,
+        };
+
         Ok(Self {
             rtsp_url,
             s3_endpoint,
@@ -75,6 +107,8 @@ impl AppConfig {
             s3_bucket,
             camera_id,
             record_seconds,
+            ffmpeg_preset,
+            ffmpeg_crf,
         })
     }
 }

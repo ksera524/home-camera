@@ -29,11 +29,13 @@ async fn run() -> Result<(), AppError> {
         &config.rtsp_url,
         &temp_file,
         Duration::from_secs(config.record_seconds),
+        &config.ffmpeg_preset,
+        config.ffmpeg_crf,
     )?;
 
     println!(
-        "recording completed: rtp_packets={}, access_units={}",
-        stats.rtp_packets, stats.access_units
+        "recording completed: recorded_seconds={}",
+        stats.recorded_seconds
     );
     println!("uploading to s3://{}/{}", config.s3_bucket, object_key);
 

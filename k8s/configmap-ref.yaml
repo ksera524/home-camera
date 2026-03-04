@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sandbox-connection-info
+  namespace: sandbox
+data:
+  RUSTFS_S3_ENDPOINT: http://rustfs-svc.rustfs.svc:9000
+  RUSTFS_S3_REGION: us-east-1

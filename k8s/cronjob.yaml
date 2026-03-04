@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: home-camera-recorder
+  namespace: sandbox
+spec:
+  schedule: "0 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 4200
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: recorder
+              image: harbor.qroksera.com/sandbox/home-camera:latest
+              imagePullPolicy: IfNotPresent
+              envFrom:
+                - configMapRef:
+                    name: sandbox-connection-info
+              env:
+                - name: RTSP_URL
+                  value: "rtsp://s5kVuizVreFu2SxK:0FnaKGTm2bGgqxK2@192.168.10.15/live0"
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: home-camera-secret
+                      key: AWS_ACCESS_KEY_ID
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: home-camera-secret
+                      key: AWS_SECRET_ACCESS_KEY
+                - name: S3_BUCKET
+                  value: home-camera-recordings
+                - name: CAMERA_ID
+                  value: camera
+                - name: RECORD_SECONDS
+                  value: "3600"
+                - name: FFMPEG_PRESET
+                  value: veryfast
+                - name: FFMPEG_CRF
+                  value: "23"

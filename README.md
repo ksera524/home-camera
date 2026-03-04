@@ -5,7 +5,7 @@ Batch app for hourly RTSP recording and upload to RustFS (S3-compatible storage)
 ## What it does
 
 - Connects to an RTSP camera URL from `RTSP_URL`
-- Records H.264 stream for `RECORD_SECONDS` (default: 3600)
+- Records stream for `RECORD_SECONDS` (default: 3600) using ffmpeg
 - Creates MP4 file locally
 - Uploads MP4 to RustFS using S3 API
 - Uses object key format: `camera/YYYY/MM/DD/HH.mp4`
@@ -23,6 +23,8 @@ Batch app for hourly RTSP recording and upload to RustFS (S3-compatible storage)
 - `S3_BUCKET` (default: `home-camera-recordings`)
 - `CAMERA_ID` (default: `camera`)
 - `RECORD_SECONDS` (default: `3600`)
+- `FFMPEG_PRESET` (default: `veryfast`)
+- `FFMPEG_CRF` (default: `23`, range: `0..=51`)
 
 ## Local run
 

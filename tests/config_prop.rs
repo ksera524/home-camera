@@ -44,6 +44,15 @@ proptest! {
             prop_assert!(parsed.is_ok());
         }
     }
+
+    #[test]
+    fn ffmpeg_crf_in_range_is_accepted(crf in 0u8..=51u8) {
+        let mut vars = base_env();
+        vars.insert("FFMPEG_CRF".to_string(), crf.to_string());
+
+        let cfg = AppConfig::from_map(&vars).expect("config should parse");
+        prop_assert_eq!(cfg.ffmpeg_crf, crf);
+    }
 }
 
 #[test]
@@ -64,4 +73,19 @@ fn missing_required_fields_fail() {
             "{key} should be required"
         );
     }
+}
+
+#[test]
+fn ffmpeg_defaults_are_applied() {
+    let vars = base_env();
+    let cfg = AppConfig::from_map(&vars).expect("config should parse");
+    assert_eq!(cfg.ffmpeg_preset, AppConfig::DEFAULT_FFMPEG_PRESET);
+    assert_eq!(cfg.ffmpeg_crf, AppConfig::DEFAULT_FFMPEG_CRF);
+}
+
+#[test]
+fn ffmpeg_crf_above_max_is_rejected() {
+    let mut vars = base_env();
+    vars.insert("FFMPEG_CRF".to_string(), "52".to_string());
+    assert!(AppConfig::from_map(&vars).is_err());
 }
