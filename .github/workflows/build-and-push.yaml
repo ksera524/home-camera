@@ -14,12 +14,45 @@ permissions:
   pull-requests: read
 
 jobs:
-  build-and-push:
-    runs-on: home-camera-runners  # Kubernetes Runner
+  build-image:
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Build Docker image
+      run: |
+        echo "=== Build image on GitHub-hosted runner ==="
+        docker build -t home-camera:ci .
+
+    - name: Export Docker image tar
+      run: |
+        docker save home-camera:ci | gzip > /tmp/home-camera-image.tar.gz
+
+    - name: Upload image artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: home-camera-image
+        path: /tmp/home-camera-image.tar.gz
+        retention-days: 1
+
+  push-image:
+    if: github.event_name == 'push'
+    needs: build-image
+    runs-on: home-camera-runners  # self-hosted runner
+
+    steps:
+    - name: Download image artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: home-camera-image
+        path: /tmp
+
+    - name: Load Docker image
+      run: |
+        echo "=== Load image on self-hosted runner ==="
+        gunzip -c /tmp/home-camera-image.tar.gz | docker load
 
     - name: Setup kubectl and Harbor credentials
       run: |
@@ -57,9 +90,9 @@ jobs:
         chmod 600 /tmp/harbor_*
         echo "✅ Harbor credentials retrieved successfully"
 
-    - name: Build and push images using Docker
+    - name: Tag and push images using Docker
       run: |
-        echo "=== Build and push images using Docker ==="
+        echo "=== Tag and push image on self-hosted runner ==="
 
         HARBOR_USERNAME=$(cat /tmp/harbor_username)
         HARBOR_PASSWORD=$(cat /tmp/harbor_password)
@@ -67,11 +100,6 @@ jobs:
         HARBOR_PROJECT=$(cat /tmp/harbor_project)
         IMAGE_SHA_TAG="${{ github.sha }}"
         IMAGE_LATEST_TAG="latest"
-
-        SHOULD_PUSH="false"
-        if [[ "${{ github.event_name }}" == "push" ]]; then
-          SHOULD_PUSH="true"
-        fi
 
         # 内部CAを信頼ストアに追加
         echo "Installing internal CA..."
@@ -83,16 +111,9 @@ jobs:
         sudo mkdir -p /etc/docker/certs.d/harbor.internal.qroksera.com
         sudo cp /tmp/harbor_ca.crt /etc/docker/certs.d/harbor.internal.qroksera.com/ca.crt
 
-        # Build Docker image
-        echo "Building Docker image"
-        docker build -t $HARBOR_URL/$HARBOR_PROJECT/home-camera:$IMAGE_LATEST_TAG .
-        docker build -t $HARBOR_URL/$HARBOR_PROJECT/home-camera:$IMAGE_SHA_TAG .
-
-        # pushするかどうかの判定（PR時はpushしない）
-        if [ "$SHOULD_PUSH" == "false" ]; then
-          echo "⏭️  Skipping push (PR build only)"
-          exit 0
-        fi
+        # Load済みのローカルimageをHarborタグに付け替える
+        docker tag home-camera:ci $HARBOR_URL/$HARBOR_PROJECT/home-camera:$IMAGE_LATEST_TAG
+        docker tag home-camera:ci $HARBOR_URL/$HARBOR_PROJECT/home-camera:$IMAGE_SHA_TAG
 
         # /etc/hostsにharbor.internal.qroksera.comを追加
         echo "192.168.122.100 harbor.internal.qroksera.com" | sudo tee -a /etc/hosts
@@ -113,5 +134,5 @@ jobs:
       if: always()
       run: |
         echo "=== Cleanup ==="
-        rm -f /tmp/harbor_* /tmp/kubeconfig /tmp/home-camera-*.tar
+        rm -f /tmp/harbor_* /tmp/kubeconfig /tmp/home-camera-image.tar.gz
         echo "✅ Cleanup completed"
