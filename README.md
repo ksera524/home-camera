@@ -8,7 +8,7 @@ Batch app for hourly RTSP recording and upload to RustFS (S3-compatible storage)
 - Records stream for `RECORD_SECONDS` (default: 3600) using ffmpeg
 - Creates MP4 file locally
 - Uploads MP4 to RustFS using S3 API
-- Uses object key format: `camera/YYYY/MM/DD/HH.mp4`
+- Uses object key format: `camera/YYYY/MM/DD/HH.mp4` (JST)
 
 ## Required environment variables
 

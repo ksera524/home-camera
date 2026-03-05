@@ -4,3 +4,4 @@ pub mod key;
 pub mod recorder;
 pub mod retry;
 pub mod storage;
+pub mod slack_client;
