@@ -2,19 +2,19 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use anyhow::Result;
-use home_camera::{config::AppConfig,};
+use home_camera::config::AppConfig;
 use home_camera::error::AppError;
 use home_camera::key::build_object_key;
 use home_camera::recorder::record_to_mp4;
-use home_camera::storage::upload_file;
 use home_camera::slack_client::post_message;
+use home_camera::storage::upload_file;
 use reqwest::Client;
 use time::{OffsetDateTime, UtcOffset};
 
 const JST_OFFSET_HOURS: i8 = 9;
 
 #[tokio::main]
-async fn main()  -> Result<()> {
+async fn main() -> Result<()> {
     let http = Client::builder().build()?;
     let _ = post_message(&http, "log", "camera start").await;
     if let Err(e) = run().await {
@@ -40,6 +40,10 @@ async fn run() -> Result<(), AppError> {
         &config.rtsp_url,
         &temp_file,
         Duration::from_secs(config.record_seconds),
+        &config.ffmpeg_loglevel,
+        &config.ffmpeg_video_codec,
+        &config.ffmpeg_audio_codec,
+        &config.ffmpeg_audio_bitrate,
         &config.ffmpeg_preset,
         config.ffmpeg_crf,
     )?;

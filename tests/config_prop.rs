@@ -79,6 +79,19 @@ fn missing_required_fields_fail() {
 fn ffmpeg_defaults_are_applied() {
     let vars = base_env();
     let cfg = AppConfig::from_map(&vars).expect("config should parse");
+    assert_eq!(
+        cfg.ffmpeg_video_codec,
+        AppConfig::DEFAULT_FFMPEG_VIDEO_CODEC
+    );
+    assert_eq!(
+        cfg.ffmpeg_audio_codec,
+        AppConfig::DEFAULT_FFMPEG_AUDIO_CODEC
+    );
+    assert_eq!(
+        cfg.ffmpeg_audio_bitrate,
+        AppConfig::DEFAULT_FFMPEG_AUDIO_BITRATE
+    );
+    assert_eq!(cfg.ffmpeg_loglevel, AppConfig::DEFAULT_FFMPEG_LOGLEVEL);
     assert_eq!(cfg.ffmpeg_preset, AppConfig::DEFAULT_FFMPEG_PRESET);
     assert_eq!(cfg.ffmpeg_crf, AppConfig::DEFAULT_FFMPEG_CRF);
 }
@@ -88,4 +101,18 @@ fn ffmpeg_crf_above_max_is_rejected() {
     let mut vars = base_env();
     vars.insert("FFMPEG_CRF".to_string(), "52".to_string());
     assert!(AppConfig::from_map(&vars).is_err());
+}
+
+#[test]
+fn empty_new_ffmpeg_settings_are_rejected() {
+    for key in [
+        "FFMPEG_VIDEO_CODEC",
+        "FFMPEG_AUDIO_CODEC",
+        "FFMPEG_AUDIO_BITRATE",
+        "FFMPEG_LOGLEVEL",
+    ] {
+        let mut vars = base_env();
+        vars.insert(key.to_string(), "   ".to_string());
+        assert!(AppConfig::from_map(&vars).is_err(), "{key} should fail");
+    }
 }
