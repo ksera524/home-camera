@@ -822,15 +822,9 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "aws-config",
- "aws-credential-types",
  "aws-sdk-s3",
- "aws-types",
  "proptest",
  "reqwest",
- "serde",
- "serde_json",
- "shiguredo_http11",
- "shiguredo_rtsp",
  "thiserror",
  "time",
  "tokio",
@@ -1631,22 +1625,6 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
-]
-
-[[package]]
-name = "shiguredo_http11"
-version = "2026.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84628cbdeb6a6a46e1134587ecc4ff6a2013837bcc4894d06818dcdc311998ea"
-
-[[package]]
-name = "shiguredo_rtsp"
-version = "2026.1.0-canary.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2cfa13ee8e97463ef673c817b0242f11ebcd7dd10f6144e03bfc2044ae79b8f"
-dependencies = [
- "md-5",
- "shiguredo_http11",
 ]
 
 [[package]]

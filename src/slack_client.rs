@@ -1,6 +1,7 @@
+use std::collections::HashMap;
+
 use anyhow::{Context, Result};
 use reqwest::Client;
-use serde_json::{Value, json};
 
 const DEFAULT_SLACK_BASE_URL: &str = "http://slack:3000";
 
@@ -14,10 +15,7 @@ pub async fn post_message_to(
     channel: &str,
     text: &str,
 ) -> Result<(u16, String)> {
-    let data = json!({
-        "channel": channel,
-        "text": text
-    });
+    let data = HashMap::from([("channel", channel), ("text", text)]);
     post_json(
         http,
         &format!("{}/slack/message", normalize_base_url(base_url)),
@@ -26,7 +24,11 @@ pub async fn post_message_to(
     .await
 }
 
-async fn post_json(http: &Client, url: &str, payload: Value) -> Result<(u16, String)> {
+async fn post_json(
+    http: &Client,
+    url: &str,
+    payload: HashMap<&str, &str>,
+) -> Result<(u16, String)> {
     let response = http
         .post(url)
         .json(&payload)

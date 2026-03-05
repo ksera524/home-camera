@@ -1,10 +1,9 @@
 use std::path::Path;
 
 use aws_config::BehaviorVersion;
-use aws_credential_types::Credentials;
 use aws_sdk_s3::Client;
+use aws_sdk_s3::config::{Credentials, Region};
 use aws_sdk_s3::primitives::ByteStream;
-use aws_types::region::Region;
 
 use crate::config::AppConfig;
 use crate::error::AppError;

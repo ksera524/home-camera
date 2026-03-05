@@ -14,9 +14,6 @@ pub enum AppError {
     #[error("time error: {0}")]
     Time(#[from] time::error::ComponentRange),
 
-    #[error("rtsp error: {0}")]
-    Rtsp(#[from] shiguredo_rtsp::Error),
-
     #[error("uri parse error: {0}")]
     Uri(String),
 
