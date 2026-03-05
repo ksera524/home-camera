@@ -44,7 +44,7 @@ spec:
                 - name: FFMPEG_VIDEO_CODEC
                   value: copy
                 - name: FFMPEG_AUDIO_CODEC
-                  value: aac
+                  value: copy
                 - name: FFMPEG_AUDIO_BITRATE
                   value: 128k
                 - name: FFMPEG_LOGLEVEL
