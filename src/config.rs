@@ -25,7 +25,7 @@ impl AppConfig {
     pub const DEFAULT_CAMERA_ID: &'static str = "camera";
     pub const DEFAULT_RECORD_SECONDS: u64 = 3600;
     pub const DEFAULT_FFMPEG_VIDEO_CODEC: &'static str = "copy";
-    pub const DEFAULT_FFMPEG_AUDIO_CODEC: &'static str = "aac";
+    pub const DEFAULT_FFMPEG_AUDIO_CODEC: &'static str = "copy";
     pub const DEFAULT_FFMPEG_AUDIO_BITRATE: &'static str = "128k";
     pub const DEFAULT_FFMPEG_LOGLEVEL: &'static str = "warning";
     pub const DEFAULT_FFMPEG_PRESET: &'static str = "veryfast";

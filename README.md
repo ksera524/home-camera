@@ -24,7 +24,7 @@ Batch app for hourly RTSP recording and upload to RustFS (S3-compatible storage)
 - `CAMERA_ID` (default: `camera`)
 - `RECORD_SECONDS` (default: `3600`)
 - `FFMPEG_VIDEO_CODEC` (default: `copy`)
-- `FFMPEG_AUDIO_CODEC` (default: `aac`)
+- `FFMPEG_AUDIO_CODEC` (default: `copy`)
 - `FFMPEG_AUDIO_BITRATE` (default: `128k`)
 - `FFMPEG_LOGLEVEL` (default: `warning`)
 - `FFMPEG_PRESET` (default: `veryfast`)
@@ -32,7 +32,7 @@ Batch app for hourly RTSP recording and upload to RustFS (S3-compatible storage)
 
 Notes:
 
-- Default pipeline favors stability and quality (`copy` video + `aac` audio)
+- Default pipeline favors stability and quality (`copy` video + `copy` audio)
 - `FFMPEG_PRESET` and `FFMPEG_CRF` are only used when `FFMPEG_VIDEO_CODEC=libx264`
 
 ## Local run
