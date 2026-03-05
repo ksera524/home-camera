@@ -2,7 +2,7 @@ use std::path::Path;
 use std::process::Command;
 use std::time::Duration;
 
-use shiguredo_http11::uri::Uri;
+use reqwest::Url;
 
 use crate::error::AppError;
 
@@ -98,14 +98,14 @@ pub fn record_to_mp4(
 }
 
 fn validate_rtsp_url(rtsp_url: &str) -> Result<(), AppError> {
-    let uri = Uri::parse(rtsp_url).map_err(|e| AppError::Uri(e.to_string()))?;
-    let scheme = uri.scheme().unwrap_or_default().to_ascii_lowercase();
+    let uri = Url::parse(rtsp_url).map_err(|e| AppError::Uri(e.to_string()))?;
+    let scheme = uri.scheme().to_ascii_lowercase();
     if scheme != "rtsp" {
         return Err(AppError::Recording(
             "RTSP_URL scheme must be rtsp".to_string(),
         ));
     }
-    if uri.host().is_none() {
+    if uri.host_str().is_none() {
         return Err(AppError::Recording(
             "RTSP_URL must include host".to_string(),
         ));
