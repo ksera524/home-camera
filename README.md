@@ -2,6 +2,7 @@
 
 Batch app for hourly RTSP recording and upload to RustFS (S3-compatible storage).
 
+
 ## What it does
 
 - Connects to an RTSP camera URL from `RTSP_URL`
